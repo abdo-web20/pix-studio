@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixStudio Border</title>
+  <style>
+    :root { --bg:#f6f8fb; --card:#fff; --text:#111827; --muted:#4b5563; --primary:#16a34a; --primary-hover:#15803d; --border:#e5e7eb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; }
+    .nav { max-width: 980px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .brand { font-size: 20px; font-weight: 800; color: var(--text); text-decoration: none; }
+    .nav-links a { margin-right: 12px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 600; }
+    .container { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0; }
+    label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    input[type="file"], input[type="range"], input[type="color"] { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: #fafafa; }
+    .btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn:hover { background: var(--primary-hover); }
+    canvas { max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block; margin: 14px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <a class="brand" href="index.html">PixStudio</a>
+      <div class="nav-links">
+        <a href="index.html">Compress</a>
+        <a href="resize.html">Resize</a>
+        <a href="rotate.html">Rotate</a>
+        <a href="crop.html">Crop</a>
+        <a href="filters.html">Filters</a>
+        <a href="watermark.html">Watermark</a>
+        <a href="border.html">Border</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="box">
+      <input type="file" id="bFile" accept="image/*" />
+      <div class="grid">
+        <div>
+          <label>Border Width: <span id="wVal">20</span>px</label>
+          <input type="range" id="bWidth" min="0" max="120" value="20" />
+        </div>
+        <div>
+          <label>Radius: <span id="rVal">16</span>px</label>
+          <input type="range" id="bRadius" min="0" max="150" value="16" />
+        </div>
+        <div>
+          <label>Border Color</label>
+          <input type="color" id="bColor" value="#ffffff" />
+        </div>
+      </div>
+
+      <canvas id="bCanvas" width="600" height="340"></canvas>
+      <a id="bDownload" class="btn" style="display:none;" download="pixstudio-bordered.png">Download</a>
+    </section>
+  </main>
+
+  <script>
+    const bFile = document.getElementById("bFile");
+    const bWidth = document.getElementById("bWidth");
+    const bRadius = document.getElementById("bRadius");
+    const bColor = document.getElementById("bColor");
+    const wVal = document.getElementById("wVal");
+    const rVal = document.getElementById("rVal");
+    const canvas = document.getElementById("bCanvas");
+    const ctx = canvas.getContext("2d");
+    const dl = document.getElementById("bDownload");
+
+    let img = null;
+
+    function roundRectPath(x, y, w, h, r) {
+      const rad = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rad, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rad);
+      ctx.arcTo(x + w, y + h, x, y + h, rad);
+      ctx.arcTo(x, y + h, x, y, rad);
+      ctx.arcTo(x, y, x + w, y, rad);
+      ctx.closePath();
+    }
+
+    function drawBorder() {
+      wVal.textContent = bWidth.value;
+      rVal.textContent = bRadius.value;
+      if (!img) return;
+      const bw = Number(bWidth.value);
+      const rad = Number(bRadius.value);
+      const iw = img.naturalWidth;
+      const ih = img.naturalHeight;
+
+      canvas.width = iw + bw * 2;
+      canvas.height = ih + bw * 2;
+
+      if (bw > 0) {
+        ctx.fillStyle = bColor.value;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+
+      ctx.save();
+      roundRectPath(bw, bw, iw, ih, rad);
+      ctx.clip();
+      ctx.drawImage(img, bw, bw, iw, ih);
+      ctx.restore();
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        dl.href = URL.createObjectURL(blob);
+        dl.style.display = "inline-block";
+      }, "image/png");
+    }
+
+    bFile.addEventListener("change", (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = (ev) => {
+        const im = new Image();
+        im.onload = () => {
+          img = im;
+          drawBorder();
+        };
+        im.src = ev.target.result;
+      };
+      r.readAsDataURL(f);
+    });
+
+    [bWidth, bRadius, bColor].forEach((el) => {
+      el.addEventListener("input", drawBorder);
+    });
+  </script>
+</body>
+</html>
