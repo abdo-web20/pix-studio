@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixStudio Collage</title>
+  <style>
+    :root { --bg:#f6f8fb; --card:#fff; --text:#111827; --muted:#4b5563; --primary:#16a34a; --primary-hover:#15803d; --border:#e5e7eb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; }
+    .nav { max-width: 980px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .brand { font-size: 20px; font-weight: 800; color: var(--text); text-decoration: none; }
+    .nav-links a { margin-right: 12px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 600; }
+    .container { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 16px 0; }
+    label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    input[type="file"], select, input[type="range"] { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: #fafafa; }
+    .btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn:hover { background: var(--primary-hover); }
+    canvas { max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block; margin: 14px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <a class="brand" href="index.html">PixStudio</a>
+      <div class="nav-links">
+        <a href="index.html">Compress</a>
+        <a href="resize.html">Resize</a>
+        <a href="rotate.html">Rotate</a>
+        <a href="crop.html">Crop</a>
+        <a href="filters.html">Filters</a>
+        <a href="watermark.html">Watermark</a>
+        <a href="border.html">Border</a>
+        <a href="collage.html">Collage</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="box">
+      <div class="grid">
+        <div>
+          <label>Image 1</label>
+          <input type="file" id="cFile1" accept="image/*" />
+        </div>
+        <div>
+          <label>Image 2</label>
+          <input type="file" id="cFile2" accept="image/*" />
+        </div>
+        <div>
+          <label>Layout</label>
+          <select id="cDir">
+            <option value="h">Horizontal</option>
+            <option value="v">Vertical</option>
+          </select>
+        </div>
+        <div>
+          <label>Gap: <span id="gVal">12</span>px</label>
+          <input type="range" id="cGap" min="0" max="80" value="12" />
+        </div>
+      </div>
+
+      <canvas id="cCanvas" width="600" height="340"></canvas>
+      <a id="cDownload" class="btn" style="display:none;" download="pixstudio-collage.png">Download</a>
+    </section>
+  </main>
+
+  <script>
+    const cFile1 = document.getElementById("cFile1");
+    const cFile2 = document.getElementById("cFile2");
+    const cDir = document.getElementById("cDir");
+    const cGap = document.getElementById("cGap");
+    const gVal = document.getElementById("gVal");
+    const canvas = document.getElementById("cCanvas");
+    const ctx = canvas.getContext("2d");
+    const dl = document.getElementById("cDownload");
+
+    let img1 = null, img2 = null;
+
+    function loadImg(file, cb) {
+      if (!file) return;
+      const r = new FileReader();
+      r.onload = (ev) => {
+        const im = new Image();
+        im.onload = () => cb(im);
+        im.src = ev.target.result;
+      };
+      r.readAsDataURL(file);
+    }
+
+    function drawCollage() {
+      gVal.textContent = cGap.value;
+      if (!img1 && !img2) return;
+      const gap = Number(cGap.value);
+      const dir = cDir.value;
+
+      if (img1 && img2) {
+        if (dir === "h") {
+          const targetH = Math.min(img1.naturalHeight, img2.naturalHeight, 1200);
+          const w1 = img1.naturalWidth * (targetH / img1.naturalHeight);
+          const w2 = img2.naturalWidth * (targetH / img2.naturalHeight);
+          canvas.width = Math.round(w1 + w2 + gap);
+          canvas.height = Math.round(targetH);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img1, 0, 0, w1, targetH);
+          ctx.drawImage(img2, w1 + gap, 0, w2, targetH);
+        } else {
+          const targetW = Math.min(img1.naturalWidth, img2.naturalWidth, 1200);
+          const h1 = img1.naturalHeight * (targetW / img1.naturalWidth);
+          const h2 = img2.naturalHeight * (targetW / img2.naturalWidth);
+          canvas.width = Math.round(targetW);
+          canvas.height = Math.round(h1 + h2 + gap);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img1, 0, 0, targetW, h1);
+          ctx.drawImage(img2, 0, h1 + gap, targetW, h2);
+        }
+      } else {
+        const single = img1 || img2;
+        canvas.width = single.naturalWidth;
+        canvas.height = single.naturalHeight;
+        ctx.drawImage(single, 0, 0);
+      }
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        dl.href = URL.createObjectURL(blob);
+        dl.style.display = "inline-block";
+      }, "image/png");
+    }
+
+    cFile1.addEventListener("change", (e) => loadImg(e.target.files[0], (im) => { img1 = im; drawCollage(); }));
+    cFile2.addEventListener("change", (e) => loadImg(e.target.files[0], (im) => { img2 = im; drawCollage(); }));
+    [cDir, cGap].forEach((el) => el.addEventListener("input", drawCollage));
+  </script>
+</body>
+</html>
