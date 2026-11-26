@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تدوير وقلب الصور أونلاين | PixStudio</title>
+  <meta name="description" content="لف ودوّر واقلب الصور بزاوية 90 أو 180 أو 270 درجة أونلاين مجاناً داخل المتصفح." />
+  <style>
+    :root { --bg:#f6f8fb; --card:#fff; --text:#111827; --muted:#4b5563; --primary:#16a34a; --primary-hover:#15803d; --border:#e5e7eb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 16px 20px; }
+    .nav { max-width: 980px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .brand { font-size: 20px; font-weight: 800; color: var(--text); text-decoration: none; }
+    .nav-links a { margin-right: 14px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 600; }
+    .container { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 20px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
+    .btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn:hover { background: var(--primary-hover); }
+    .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    .btn-sec { background: #374151; }
+    .btn-sec:hover { background: #1f2937; }
+    .preview-img { max-width: 100%; max-height: 300px; border-radius: 10px; display: block; margin: 14px 0; border: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <a class="brand" href="index.html">PixStudio</a>
+      <div class="nav-links">
+        <a href="index.html">الضغط والتحويل</a>
+        <a href="resize.html">تغيير الأبعاد</a>
+        <a href="rotate.html">تدوير وقلب</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="box">
+      <h1>أداة تدوير وقلب الصور</h1>
+      <p style="color:var(--muted)">عدّل اتجاه الصورة باللف أو القلب بضغطة واحدة دون رفعها لأي سيرفر.</p>
+
+      <label for="rotFile" style="display:block; font-weight:700; margin-bottom:6px;">اختر صورة</label>
+      <input type="file" id="rotFile" accept="image/*" />
+
+      <div class="actions">
+        <button id="rotRight" class="btn" disabled>لف يمين 90°</button>
+        <button id="rotLeft" class="btn btn-sec" disabled>لف يسار 90°</button>
+        <button id="flipH" class="btn btn-sec" disabled>قلب أفقي</button>
+        <button id="flipV" class="btn btn-sec" disabled>قلب رأسي</button>
+      </div>
+
+      <img id="rotPreview" class="preview-img" alt="معاينة الصورة" style="display:none;" />
+      <a id="rotDownload" class="btn" style="display:none;" download="pixstudio-rotated.png">تحميل الصورة المعدّلة</a>
+    </section>
+
+    <section class="box">
+      <h2>إصلاح اتجاه الصور المصوّرة بالهاتف</h2>
+      <p>أحياناً تُلتقط الصورة بالعرض أو المقلوب وتظهر بزاوية غير مضبوطة عند فتحها أو رفعها. تدويرها وحفظها مباشرة يثبّت الاتجاه الصحيح في ملف الصورة نفسه.</p>
+    </section>
+  </main>
+
+  <script>
+    const rotFile = document.getElementById("rotFile");
+    const rotRight = document.getElementById("rotRight");
+    const rotLeft = document.getElementById("rotLeft");
+    const flipH = document.getElementById("flipH");
+    const flipV = document.getElementById("flipV");
+    const rotPreview = document.getElementById("rotPreview");
+    const rotDownload = document.getElementById("rotDownload");
+    const btns = [rotRight, rotLeft, flipH, flipV];
+
+    let baseImg = null;
+    let angle = 0;
+    let sx = 1;
+    let sy = 1;
+
+    function render() {
+      if (!baseImg) return;
+      const rad = (angle % 360) * Math.PI / 180;
+      const swap = (Math.abs(angle % 180) === 90);
+      const w = swap ? baseImg.naturalHeight : baseImg.naturalWidth;
+      const h = swap ? baseImg.naturalWidth : baseImg.naturalHeight;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.translate(w / 2, h / 2);
+      ctx.rotate(rad);
+      ctx.scale(sx, sy);
+      ctx.drawImage(baseImg, -baseImg.naturalWidth / 2, -baseImg.naturalHeight / 2);
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        rotPreview.src = url;
+        rotPreview.style.display = "block";
+        rotDownload.href = url;
+        rotDownload.style.display = "inline-block";
+      }, "image/png");
+    }
+
+    rotFile.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          baseImg = img;
+          angle = 0; sx = 1; sy = 1;
+          btns.forEach(b => b.disabled = false);
+          render();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    rotRight.addEventListener("click", () => { angle = (angle + 90) % 360; render(); });
+    rotLeft.addEventListener("click", () => { angle = (angle - 90 + 360) % 360; render(); });
+    flipH.addEventListener("click", () => { sx *= -1; render(); });
+    flipV.addEventListener("click", () => { sy *= -1; render(); });
+  </script>
+</body>
+</html>
