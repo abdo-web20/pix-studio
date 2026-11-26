@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixStudio | ضغط وتحويل الصور مجاناً أونلاين</title>
+  <meta name="description" content="أداة مجانية وسريعة لضغط الصور وتصغير حجمها وتحويل الصيغ بين PNG و JPG و WEBP مباشرة في المتصفح مع شروحات ومقالات تقنية." />
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #111827;
+      --muted: #4b5563;
+      --primary: #16a34a;
+      --primary-hover: #15803d;
+      --border: #e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .nav {
+      max-width: 980px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .brand { font-size: 20px; font-weight: 800; color: var(--text); text-decoration: none; }
+    .nav-links a {
+      margin-right: 14px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .container { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .hero {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 22px;
+    }
+    .hero h1 { margin: 0 0 8px; font-size: 26px; }
+    .hero p { margin: 0; color: var(--muted); }
+    .tool-box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 24px;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin: 18px 0;
+    }
+    .control-item label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 14px; }
+    input[type="file"], select, input[type="range"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #fafafa;
+    }
+    .btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    .result {
+      margin-top: 20px;
+      padding: 16px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      background: #f8fafc;
+      display: none;
+    }
+    .stats { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 12px; font-size: 14px; font-weight: 700; }
+    .preview-img { max-width: 100%; max-height: 280px; border-radius: 10px; display: block; margin: 12px 0; }
+    .articles { display: grid; gap: 18px; }
+    article {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+    }
+    article h2 { margin-top: 0; font-size: 20px; }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      padding: 28px 16px 40px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <a class="brand" href="#">PixStudio</a>
+      <div class="nav-links">
+        <a href="#tool">الأداة</a>
+        <a href="#guide-compress">ضغط الصور</a>
+        <a href="#guide-formats">تحويل الصيغ</a>
+        <a href="#privacy">الخصوصية</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <h1>ضغط وتحويل صيغ الصور أونلاين مجاناً</h1>
+      <p>قلّل حجم الصور واحفظها بصيغة JPG أو PNG أو WEBP بسرعة وأمان، حيث تتم المعالجة بالكامل داخل متصفحك دون رفع ملفاتك إلى أي خوادم خارجية.</p>
+    </section>
+
+    <section id="tool" class="tool-box">
+      <h2>أداة ضغط وتحويل الصور</h2>
+      <div class="controls">
+        <div class="control-item">
+          <label for="imageInput">1. اختر صورة من جهازك</label>
+          <input type="file" id="imageInput" accept="image/*" />
+        </div>
+        <div class="control-item">
+          <label for="formatSelect">2. الصيغة المطلوبة</label>
+          <select id="formatSelect">
+            <option value="image/jpeg">JPG (مناسب للمواقع والمشاركة)</option>
+            <option value="image/webp">WEBP (حجم أصغر وجودة ممتازة)</option>
+            <option value="image/png">PNG (جودة عالية / شفافية)</option>
+          </select>
+        </div>
+        <div class="control-item">
+          <label for="qualityRange">3. جودة الضغط: <span id="qualityValue">80%</span></label>
+          <input type="range" id="qualityRange" min="10" max="100" value="80" />
+        </div>
+      </div>
+
+      <button id="processBtn" class="btn" disabled>معالجة وتجهيز التحميل</button>
+
+      <div id="resultBox" class="result">
+        <div class="stats" id="statsText"></div>
+        <img id="previewImg" class="preview-img" alt="معاينة الصورة الناتجة" />
+        <a id="downloadLink" class="btn" style="display:inline-block; text-decoration:none;" download="pixstudio-image.jpg">تحميل الصورة</a>
+      </div>
+    </section>
+
+    <section class="articles">
+      <article id="guide-compress">
+        <h2>لماذا يهم ضغط الصور قبل نشرها على المواقع؟</h2>
+        <p>الصور عالية الدقة غالباً ما تكون بحجم كبير يبطئ سرعة تحميل الصفحات، خصوصاً على شبكات الهاتف المحمول. تقليل حجم الصورة مع الحفاظ على وضوح مقبول يحسّن تجربة الزائر ويساعد الصفحات على الفتح بشكل أسرع.</p>
+        <p>يفضّل غالباً ضبط الجودة بين 70% و85% للحصول على توازن عملي بين صغر الحجم ونقاء التفاصيل دون تشوّه ملحوظ.</p>
+      </article>
+
+      <article id="guide-formats">
+        <h2>الفرق بين صيغ PNG و JPG و WEBP ومتى تستخدم كل صيغة</h2>
+        <p><strong>JPG:</strong> مثالية للصور الفوتوغرافية والمنشورات التي لا تحتاج إلى خلفية شفافة، وتوفر حجماً مناسباً مقارنة بدقتها.</p>
+        <p><strong>PNG:</strong> مناسبة للرسومات والشعارات والصور التي تتطلب الحفاظ على الخلفية الشفافة أو تفاصيل حادة دقيقة.</p>
+        <p><strong>WEBP:</strong> صيغة حديثة تدعم الضغط الجيد وتساعد غالباً في تقليل حجم الملفات مع الحفاظ على جودة بصرية جيدة على المتصفحات الحديثة.</p>
+      </article>
+
+      <article id="privacy">
+        <h2>سياسة الخصوصية ومعالجة الملفات</h2>
+        <p>تعمل الأدوات المتوفرة في PixStudio محلياً داخل متصفح المستخدم باستخدام تقنيات الويب الحديثة، مما يعني أن الصور التي تختارها لا يتم إرسالها أو تخزينها على خوادمنا.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    PixStudio — جميع الحقوق محفوظة © 2026
+  </footer>
+
+  <script>
+    const imageInput = document.getElementById("imageInput");
+    const formatSelect = document.getElementById("formatSelect");
+    const qualityRange = document.getElementById("qualityRange");
+    const qualityValue = document.getElementById("qualityValue");
+    const processBtn = document.getElementById("processBtn");
+    const resultBox = document.getElementById("resultBox");
+    const statsText = document.getElementById("statsText");
+    const previewImg = document.getElementById("previewImg");
+    const downloadLink = document.getElementById("downloadLink");
+
+    let loadedImage = null;
+    let originalSize = 0;
+
+    qualityRange.addEventListener("input", () => {
+      qualityValue.textContent = qualityRange.value + "%";
+    });
+
+    imageInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      originalSize = file.size;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onload = () => {
+          loadedImage = img;
+          processBtn.disabled = false;
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    processBtn.addEventListener("click", () => {
+      if (!loadedImage) return;
+      const mimeType = formatSelect.value;
+      const quality = Number(qualityRange.value) / 100;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = loadedImage.naturalWidth;
+      canvas.height = loadedImage.naturalHeight;
+      const ctx = canvas.getContext("2d");
+
+      if (mimeType === "image/jpeg") {
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+      }
+      ctx.drawImage(loadedImage, 0, 0);
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const ext = mimeType === "image/png" ? "png" : (mimeType === "image/webp" ? "webp" : "jpg");
+        const origKB = (originalSize / 1024).toFixed(1);
+        const newKB = (blob.size / 1024).toFixed(1);
+
+        statsText.textContent = `الحجم الأصلي: ${origKB} KB  |  الحجم الجديد: ${newKB} KB`;
+        previewImg.src = url;
+        downloadLink.href = url;
+        downloadLink.download = `pixstudio-converted.${ext}`;
+        resultBox.style.display = "block";
+      }, mimeType, quality);
+    });
+  </script>
+</body>
+</html>
