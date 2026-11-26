@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>قص الصور أونلاين مجاناً | PixStudio</title>
+  <meta name="description" content="قص واقتطع الجزء المطلوب من الصورة بأبعاد ونسب جاهزة داخل المتصفح بسرعة وأمان." />
+  <style>
+    :root { --bg:#f6f8fb; --card:#fff; --text:#111827; --muted:#4b5563; --primary:#16a34a; --primary-hover:#15803d; --border:#e5e7eb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Tahoma, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 16px 20px; }
+    .nav { max-width: 980px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .brand { font-size: 20px; font-weight: 800; color: var(--text); text-decoration: none; }
+    .nav-links a { margin-right: 14px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 600; }
+    .container { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; margin-bottom: 20px; }
+    .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0; }
+    label { display: block; font-weight: 700; margin-bottom: 6px; font-size: 14px; }
+    input[type="file"], select, input[type="range"] { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: #fafafa; }
+    .btn { background: var(--primary); color: #fff; border: none; padding: 11px 18px; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn:hover { background: var(--primary-hover); }
+    .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    canvas { max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block; margin: 14px 0; touch-action: none; }
+    .result { margin-top: 16px; display: none; }
+    .result img { max-width: 100%; max-height: 260px; border-radius: 10px; display: block; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <a class="brand" href="index.html">PixStudio</a>
+      <div class="nav-links">
+        <a href="index.html">الضغط والتحويل</a>
+        <a href="resize.html">تغيير الأبعاد</a>
+        <a href="rotate.html">تدوير وقلب</a>
+        <a href="crop.html">قص الصور</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="box">
+      <h1>أداة قص الصور</h1>
+      <p style="color:var(--muted)">اختر صورة وحدد النسبة وحجم إطار القص، واسحب المربع على الجزء اللي محتاجه.</p>
+
+      <div class="controls">
+        <div>
+          <label for="cropFile">1. اختر صورة</label>
+          <input type="file" id="cropFile" accept="image/*" />
+        </div>
+        <div>
+          <label for="ratioSelect">2. نسبة القص</label>
+          <select id="ratioSelect">
+            <option value="1">مربع (1:1)</option>
+            <option value="1.7777">عرضي (16:9)</option>
+            <option value="1.3333">تقليدي (4:3)</option>
+            <option value="0.5625">طولي ستوري (9:16)</option>
+          </select>
+        </div>
+        <div>
+          <label for="scaleSlider">3. حجم إطار القص: <span id="scaleVal">60%</span></label>
+          <input type="range" id="scaleSlider" min="20" max="95" value="60" />
+        </div>
+      </div>
+
+      <canvas id="editorCanvas" width="600" height="360"></canvas>
+      <button id="cropBtn" class="btn" disabled>قص وحفظ النتيجة</button>
+
+      <div id="resultBox" class="result">
+        <img id="croppedImg" alt="الصورة المقصوصة" />
+        <a id="dlCrop" class="btn" download="pixstudio-cropped.png">تحميل الصورة المقصوصة</a>
+      </div>
+    </section>
+
+    <section class="box">
+      <h2>فوائد قص الصور قبل النشر</h2>
+      <p>إزالة الزوائد الجانبية تركز انتباه المشاهد على العنصر الأساسي، وتجعل أبعاد الصورة متوافقة مع مكان عرضها سواء غلاف مقال أو صورة شخصية أو منشور اجتماعي.</p>
+    </section>
+  </main>
+
+  <script>
+    const cropFile = document.getElementById("cropFile");
+    const ratioSelect = document.getElementById("ratioSelect");
+    const scaleSlider = document.getElementById("scaleSlider");
+    const scaleVal = document.getElementById("scaleVal");
+    const canvas = document.getElementById("editorCanvas");
+    const ctx = canvas.getContext("2d");
+    const cropBtn = document.getElementById("cropBtn");
+    const resultBox = document.getElementById("resultBox");
+    const croppedImg = document.getElementById("croppedImg");
+    const dlCrop = document.getElementById("dlCrop");
+
+    let img = null;
+    let dispW = 600, dispH = 360;
+    let box = { x: 100, y: 50, w: 200, h: 200 };
+    let dragging = false, offX = 0, offY = 0;
+
+    function updateBox() {
+      if (!img) return;
+      const ratio = Number(ratioSelect.value);
+      const pct = Number(scaleSlider.value) / 100;
+      scaleVal.textContent = scaleSlider.value + "%";
+
+      let bw = dispW * pct;
+      let bh = bw / ratio;
+      if (bh > dispH * pct) {
+        bh = dispH * pct;
+        bw = bh * ratio;
+      }
+      box.w = Math.max(30, bw);
+      box.h = Math.max(30, bh);
+      box.x = Math.min(Math.max(0, box.x), dispW - box.w);
+      box.y = Math.min(Math.max(0, box.y), dispH - box.h);
+      draw();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!img) return;
+      ctx.drawImage(img, 0, 0, dispW, dispH);
+      ctx.fillStyle = "rgba(0,0,0,0.45)";
+      ctx.fillRect(0, 0, dispW, dispH);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(box.x, box.y, box.w, box.h);
+      ctx.clip();
+      ctx.drawImage(img, 0, 0, dispW, dispH);
+      ctx.restore();
+      ctx.strokeStyle = "#16a34a";
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(box.x, box.y, box.w, box.h);
+    }
+
+    cropFile.addEventListener("change", (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = (ev) => {
+        const im = new Image();
+        im.onload = () => {
+          img = im;
+          const maxW = Math.min(720, canvas.parentElement.clientWidth - 44);
+          const scale = maxW / im.naturalWidth;
+          dispW = Math.round(im.naturalWidth * scale);
+          dispH = Math.round(im.naturalHeight * scale);
+          canvas.width = dispW;
+          canvas.height = dispH;
+          box.x = dispW * 0.15;
+          box.y = dispH * 0.15;
+          cropBtn.disabled = false;
+          updateBox();
+        };
+        im.src = ev.target.result;
+      };
+      r.readAsDataURL(f);
+    });
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: (clientX - rect.left) * (canvas.width / rect.width),
+        y: (clientY - rect.top) * (canvas.height / rect.height)
+      };
+    }
+
+    function onDown(e) {
+      if (!img) return;
+      const p = getPos(e);
+      if (p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h) {
+        dragging = true;
+        offX = p.x - box.x;
+        offY = p.y - box.y;
+      }
+    }
+
+    function onMove(e) {
+      if (!dragging) return;
+      e.preventDefault();
+      const p = getPos(e);
+      box.x = Math.min(Math.max(0, p.x - offX), dispW - box.w);
+      box.y = Math.min(Math.max(0, p.y - offY), dispH - box.h);
+      draw();
+    }
+
+    function onUp() { dragging = false; }
+
+    canvas.addEventListener("mousedown", onDown);
+    canvas.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    canvas.addEventListener("touchstart", onDown, { passive: false });
+    canvas.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+
+    ratioSelect.addEventListener("change", updateBox);
+    scaleSlider.addEventListener("input", updateBox);
+
+    cropBtn.addEventListener("click", () => {
+      if (!img) return;
+      const sx = (box.x / dispW) * img.naturalWidth;
+      const sy = (box.y / dispH) * img.naturalHeight;
+      const sw = (box.w / dispW) * img.naturalWidth;
+      const sh = (box.h / dispH) * img.naturalHeight;
+
+      const out = document.createElement("canvas");
+      out.width = Math.max(1, Math.round(sw));
+      out.height = Math.max(1, Math.round(sh));
+      out.getContext("2d").drawImage(img, sx, sy, sw, sh, 0, 0, out.width, out.height);
+      out.toBlob((blob) => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        croppedImg.src = url;
+        dlCrop.href = url;
+        resultBox.style.display = "block";
+      }, "image/png");
+    });
+  </script>
+</body>
+</html>
