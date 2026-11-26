@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixStudio Filters</title>
+  <style>
+    :root { --bg:#f6f8fb; --card:#fff; --text:#111827; --muted:#4b5563; --primary:#16a34a; --primary-hover:#15803d; --border:#e5e7eb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; }
+    .nav { max-width: 980px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .brand { font-size: 20px; font-weight: 800; color: var(--text); text-decoration: none; }
+    .nav-links a { margin-right: 12px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 600; }
+    .container { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0; }
+    label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    input[type="file"], input[type="range"] { width: 100%; }
+    .btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn:hover { background: var(--primary-hover); }
+    .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    canvas { max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block; margin: 14px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <a class="brand" href="index.html">PixStudio</a>
+      <div class="nav-links">
+        <a href="index.html">Compress</a>
+        <a href="resize.html">Resize</a>
+        <a href="rotate.html">Rotate</a>
+        <a href="crop.html">Crop</a>
+        <a href="filters.html">Filters</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="box">
+      <input type="file" id="fInput" accept="image/*" />
+      <div class="grid">
+        <div>
+          <label>Brightness: <span id="bVal">100%</span></label>
+          <input type="range" id="brightness" min="20" max="200" value="100" />
+        </div>
+        <div>
+          <label>Contrast: <span id="cVal">100%</span></label>
+          <input type="range" id="contrast" min="20" max="200" value="100" />
+        </div>
+        <div>
+          <label>Saturation: <span id="sVal">100%</span></label>
+          <input type="range" id="saturate" min="0" max="200" value="100" />
+        </div>
+        <div>
+          <label>Grayscale: <span id="gVal">0%</span></label>
+          <input type="range" id="grayscale" min="0" max="100" value="0" />
+        </div>
+      </div>
+
+      <canvas id="fCanvas" width="600" height="340"></canvas>
+      <a id="fDownload" class="btn" style="display:none;" download="pixstudio-filtered.png">Download</a>
+    </section>
+  </main>
+
+  <script>
+    const fInput = document.getElementById("fInput");
+    const brightness = document.getElementById("brightness");
+    const contrast = document.getElementById("contrast");
+    const saturate = document.getElementById("saturate");
+    const grayscale = document.getElementById("grayscale");
+    const bVal = document.getElementById("bVal");
+    const cVal = document.getElementById("cVal");
+    const sVal = document.getElementById("sVal");
+    const gVal = document.getElementById("gVal");
+    const canvas = document.getElementById("fCanvas");
+    const ctx = canvas.getContext("2d");
+    const dl = document.getElementById("fDownload");
+
+    let img = null;
+
+    function getFilterStr() {
+      bVal.textContent = brightness.value + "%";
+      cVal.textContent = contrast.value + "%";
+      sVal.textContent = saturate.value + "%";
+      gVal.textContent = grayscale.value + "%";
+      return `brightness(${brightness.value}%) contrast(${contrast.value}%) saturate(${saturate.value}%) grayscale(${grayscale.value}%)`;
+    }
+
+    function applyFilter() {
+      const filterStr = getFilterStr();
+      if (!img) return;
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.save();
+      ctx.filter = filterStr;
+      ctx.drawImage(img, 0, 0);
+      ctx.restore();
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        dl.href = URL.createObjectURL(blob);
+        dl.style.display = "inline-block";
+      }, "image/png");
+    }
+
+    fInput.addEventListener("change", (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = (ev) => {
+        const im = new Image();
+        im.onload = () => {
+          img = im;
+          applyFilter();
+        };
+        im.src = ev.target.result;
+      };
+      r.readAsDataURL(f);
+    });
+
+    [brightness, contrast, saturate, grayscale].forEach((el) => {
+      el.addEventListener("input", applyFilter);
+    });
+  </script>
+</body>
+</html>
