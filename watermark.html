@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixStudio Watermark</title>
+  <style>
+    :root { --bg:#f6f8fb; --card:#fff; --text:#111827; --muted:#4b5563; --primary:#16a34a; --primary-hover:#15803d; --border:#e5e7eb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; }
+    .nav { max-width: 980px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .brand { font-size: 20px; font-weight: 800; color: var(--text); text-decoration: none; }
+    .nav-links a { margin-right: 12px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 600; }
+    .container { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0; }
+    label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    input[type="file"], input[type="text"], input[type="range"], input[type="color"] { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: #fafafa; }
+    .btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn:hover { background: var(--primary-hover); }
+    canvas { max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block; margin: 14px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <a class="brand" href="index.html">PixStudio</a>
+      <div class="nav-links">
+        <a href="index.html">Compress</a>
+        <a href="resize.html">Resize</a>
+        <a href="rotate.html">Rotate</a>
+        <a href="crop.html">Crop</a>
+        <a href="filters.html">Filters</a>
+        <a href="watermark.html">Watermark</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="box">
+      <input type="file" id="wFile" accept="image/*" />
+      <div class="grid">
+        <div>
+          <label>Text</label>
+          <input type="text" id="wText" value="PixStudio" />
+        </div>
+        <div>
+          <label>Size: <span id="sVal">36</span>px</label>
+          <input type="range" id="wSize" min="14" max="140" value="36" />
+        </div>
+        <div>
+          <label>Opacity: <span id="oVal">60</span>%</label>
+          <input type="range" id="wOpacity" min="10" max="100" value="60" />
+        </div>
+        <div>
+          <label>Color</label>
+          <input type="color" id="wColor" value="#ffffff" />
+        </div>
+      </div>
+
+      <canvas id="wCanvas" width="600" height="340"></canvas>
+      <a id="wDownload" class="btn" style="display:none;" download="pixstudio-watermarked.png">Download</a>
+    </section>
+  </main>
+
+  <script>
+    const wFile = document.getElementById("wFile");
+    const wText = document.getElementById("wText");
+    const wSize = document.getElementById("wSize");
+    const wOpacity = document.getElementById("wOpacity");
+    const wColor = document.getElementById("wColor");
+    const sVal = document.getElementById("sVal");
+    const oVal = document.getElementById("oVal");
+    const canvas = document.getElementById("wCanvas");
+    const ctx = canvas.getContext("2d");
+    const dl = document.getElementById("wDownload");
+
+    let img = null;
+
+    function drawWatermark() {
+      sVal.textContent = wSize.value;
+      oVal.textContent = wOpacity.value;
+      if (!img) return;
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+
+      const fontSize = Number(wSize.value);
+      ctx.save();
+      ctx.globalAlpha = Number(wOpacity.value) / 100;
+      ctx.fillStyle = wColor.value;
+      ctx.font = `bold ${fontSize}px system-ui, sans-serif`;
+      ctx.textAlign = "right";
+      ctx.textBaseline = "bottom";
+      ctx.shadowColor = "rgba(0,0,0,0.5)";
+      ctx.shadowBlur = 4;
+      ctx.fillText(wText.value || "", canvas.width - 24, canvas.height - 24);
+      ctx.restore();
+
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        dl.href = URL.createObjectURL(blob);
+        dl.style.display = "inline-block";
+      }, "image/png");
+    }
+
+    wFile.addEventListener("change", (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = (ev) => {
+        const im = new Image();
+        im.onload = () => {
+          img = im;
+          drawWatermark();
+        };
+        im.src = ev.target.result;
+      };
+      r.readAsDataURL(f);
+    });
+
+    [wText, wSize, wOpacity, wColor].forEach((el) => {
+      el.addEventListener("input", drawWatermark);
+    });
+  </script>
+</body>
+</html>
