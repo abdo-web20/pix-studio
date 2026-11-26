@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixStudio BG Remover</title>
+  <style>
+    :root { --bg:#f6f8fb; --card:#fff; --text:#111827; --muted:#4b5563; --primary:#16a34a; --primary-hover:#15803d; --border:#e5e7eb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); }
+    header { background: var(--card); border-bottom: 1px solid var(--border); padding: 14px 20px; }
+    .nav { max-width: 980px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .brand { font-size: 20px; font-weight: 800; color: var(--text); text-decoration: none; }
+    .nav-links a { margin-right: 12px; text-decoration: none; color: var(--muted); font-size: 14px; font-weight: 600; }
+    .container { max-width: 980px; margin: 24px auto; padding: 0 16px; }
+    .box { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0; }
+    label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    input[type="file"], input[type="range"], input[type="color"] { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: #fafafa; }
+    .btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn:hover { background: var(--primary-hover); }
+    canvas { max-width: 100%; border-radius: 10px; border: 1px solid var(--border); display: block; margin: 14px 0; background: repeating-conic-gradient(#e5e7eb 0% 25%, #fff 0% 50%) 50% / 20px 20px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <a class="brand" href="index.html">PixStudio</a>
+      <div class="nav-links">
+        <a href="index.html">Compress</a>
+        <a href="resize.html">Resize</a>
+        <a href="rotate.html">Rotate</a>
+        <a href="crop.html">Crop</a>
+        <a href="filters.html">Filters</a>
+        <a href="watermark.html">Watermark</a>
+        <a href="border.html">Border</a>
+        <a href="collage.html">Collage</a>
+        <a href="remove-bg.html">BG Remove</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="box">
+      <input type="file" id="rFile" accept="image/*" />
+      <div class="grid">
+        <div>
+          <label>Target Color</label>
+          <input type="color" id="rColor" value="#ffffff" />
+        </div>
+        <div>
+          <label>Tolerance: <span id="tVal">40</span></label>
+          <input type="range" id="rTol" min="5" max="150" value="40" />
+        </div>
+      </div>
+
+      <canvas id="rCanvas" width="600" height="340"></canvas>
+      <a id="rDownload" class="btn" style="display:none;" download="pixstudio-nobg.png">Download</a>
+    </section>
+  </main>
+
+  <script>
+    const rFile = document.getElementById("rFile");
+    const rColor = document.getElementById("rColor");
+    const rTol = document.getElementById("rTol");
+    const tVal = document.getElementById("tVal");
+    const canvas = document.getElementById("rCanvas");
+    const ctx = canvas.getContext("2d");
+    const dl = document.getElementById("rDownload");
+
+    let img = null;
+
+    function hexToRgb(hex) {
+      const n = parseInt(hex.slice(1), 16);
+      return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+    }
+
+    function processBg() {
+      tVal.textContent = rTol.value;
+      if (!img) return;
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+
+      const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = frame.data;
+      const target = hexToRgb(rColor.value);
+      const tol = Number(rTol.value);
+
+      for (let i = 0; i < data.length; i += 4) {
+        const dr = Math.abs(data[i] - target.r);
+        const dg = Math.abs(data[i + 1] - target.g);
+        const db = Math.abs(data[i + 2] - target.b);
+        if (dr <= tol && dg <= tol && db <= tol) {
+          data[i + 3] = 0;
+        }
+      }
+
+      ctx.putImageData(frame, 0, 0);
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        dl.href = URL.createObjectURL(blob);
+        dl.style.display = "inline-block";
+      }, "image/png");
+    }
+
+    rFile.addEventListener("change", (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = (ev) => {
+        const im = new Image();
+        im.onload = () => {
+          img = im;
+          processBg();
+        };
+        im.src = ev.target.result;
+      };
+      r.readAsDataURL(f);
+    });
+
+    [rColor, rTol].forEach((el) => el.addEventListener("input", processBg));
+  </script>
+</body>
+</html>
